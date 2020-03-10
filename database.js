@@ -55,18 +55,8 @@ function getDb() {
 }
 
 var getData = {
-    checkUser: () => {
-        return new Promise((resolve,reject) => {
-            _db_client.query(``,(err, doc)=>{
-                if(err){ reject(err); }
-                if(doc.rows > 0){ resolve(true); }
-                resolve(false);
-            });
-
-        });
-    },
     getUserByEmail: (email) => { },
-    getInvitationFromSenderId: (sender, inviteLink) => {
+    getInvitationFromSenderId: (sender, inviteLink, seen) => {
         return new Promise((resolve, reject) => {
             _db_client.query(`SELECT * FROM invitations WHERE senderid='${sender}' AND link='${inviteLink}'`,
                 (err, doc) => {
@@ -123,10 +113,9 @@ var getData = {
 }
 
 var updateData = {
-
     createUser: (profile, shortId, pro_email) => {
         return new Promise((resolve, reject) => {
-            _db_client.query(`INSERT INTO users (name, link, email) VALUES ('${
+            _db_client.query(`INSERT INTO users (name, link, email) VALUES ('$1
                 profile.displayName
                 }','${shortId}','${pro_email}')`,
                 (err, res) => {
@@ -145,34 +134,33 @@ var updateData = {
         })
     },
 
-    createNewInvite: (data) => {
-        return new Promise((resolve, reject) => {   
-            _db_client.query(`
-            INSERT INTO invitations (created_at, updated_at, link, senderId, sendermsg,senderName,receiverId) 
-            VALUES ('${data.current}','${data.current}','${data.newLink}','${data.senderId}','${data.senderMsg}','${data.senderName}','${data.receiverId}')`,
+    createNewInvite: (created_at, updated_at, link, senderId, sendermsg, sendername, receiverId) => {
+        return new Promise((resolve, reject) => {
+            let current = new Date().toISOString();
+            _db_client.query(`INSERT INTO invitations (created_at, updated_at, link, senderId, sendermsg, sendername, receiverId) VALUES ('${current}','${current}','${link}','${senderId}','${sendermsg}','${sendername}','${receiverId}')`,
                 (err, result) => {
                     if (err) {
                         console.log(err);
                         reject(err);
                     }
-
-                    // const invites = [{
-                    //     created_at: data.current,
-                    //     updated_at: data.current,
-                    //     newLink: shortId,
-                    //     senderId: sess.user.id,
-                    //     sendermsg: req.body.msg,
-                    //     senderName: req.body.name,
-                    //     receiverId: req.body.to
-                    // }]
-
-                    resolve();
-                    sendEmail(receiverId, senderId, newLink);
+                    const invite = [{
+                        created_at: current,
+                        updated_at: current,
+                        link: link,
+                        senderId: senderId,
+                        sendermsg: sendermsg,
+                        sendername: sendername,
+                        receiverId: receiverId
+                    }]
+                    resolve(invite);
+                    console.log("invited")
 
                 }
             )
         })
-    }
+    },
+
+
 }
 
 module.exports = {

@@ -1,6 +1,6 @@
 require('dotenv').config();
 
-// Required third-party libraries
+// REquired third-party libraries
 const express = require("express");
 const pg = require('pg');
 const app = express();
@@ -8,17 +8,20 @@ var session = require("express-session");
 const path = require("path");
 const passport = require("passport");
 const FacebookStrategy = require("passport-facebook").Strategy;
-
+var shortid = require("shortid");
 const bodyParser = require("body-parser");
 const expressReact = require('express-react-views');
 var nodemailer = require("nodemailer");
 
-
 // Local libraries
 const initDb = require("./database").initDb;
+const getDb = require("./database").getDb;
+const getUsers = require("./database").getUsers;
 const getData = require("./database").getData;
 const updateData = require("./database").updateData;
 
+
+// const email = require("./emailService");
 const config = require("./config.json");
 
 let pro_email = "";
@@ -27,7 +30,7 @@ var sess = {
 };
 
 
-// Check to see if we are running on heroku
+//check to see if we have this heroku environment variable
 if (process.env.IS_PROD) {
 
     app.enable("trust proxy");
@@ -74,16 +77,6 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
-
-// Invitations cannot be saved to database.
-
-// 2. How to prevent duplicate entries from being created in users table everytime the use logs in? 
-
-
-
-
-
-
 passport.serializeUser((user, done) => done(null, user));
 // Deserialize user from the sessions
 passport.deserializeUser((user, done) => done(null, user));
@@ -94,48 +87,25 @@ passport.use(
             clientID: process.env.clientID,
             clientSecret: process.env.clientSecret,
             callbackURL:
-                "http://localhost:3000/auth/facebook/callback",
+                "http://localhost:5000/auth/facebook/callback",
             // "https://tpshop.herokuapp.com/auth/facebook/callback",
             profileFields: ["id", "displayName", "photos", "email"],
             enableProof: true
         },
-
-        /**
-         * @Joyce Finish the section here by creating the proper object for the done function
-         */
         function (accessToken, refreshToken, profile, done) {
-            // We get the above 4 things from facebook
-            // First we will check if the user is in our database. If not we will add the user and give done callback.
-            let email = profile.emails[0].value;
-            const userProfileExists = getData.checkUserExistsByEmail(email);
-            let user = null;
-            if(userProfileExists){
-                /**
-                 * user Object
-                 * {
-                 *   
-                 * uuid: 'uuid-goes-here',
-                 * 
-                 * email: 'email-goes-here',
-                 * 
-                 * inviteCode: 'invite-code-goes-here'
-                 * }
-                 */
-                user = getData.getUserByEmail(email);
-                done(null, {rows: [{
-
-
-                 }]});
-            }
-            else{
-                user = updateData.createUser(email)
-                if(user){
-                    done(null, {})
-                }
-                throw Error("Critical error has occured in user profile creation")
-                
-            }
-           
+            //we get the above 4 things from facebook
+            //first we will check if the user is in our database. If not we will add the user and give done callback.
+            pro_email = profile.emails[0].value;
+            getData.loadHomeByEmail(sess, pro_email)
+                .then(session => {
+                    let shortId = shortid.generate();
+                    while (shortId.indexOf('-') >= 0) {
+                        shortId = shortid.generate();
+                    }
+                    updateData.createUser(profile, shortId, pro_email).then(result => {
+                        done(null, { result })
+                    }).catch(err => { console.log(err) })
+                })
         })
 )
 
@@ -173,54 +143,59 @@ app.get(
     passport.authenticate("facebook", { scope: "email" })
 );
 
-function isLoggedIn(req, res, next) {
-    console.log(req.isAuthenticated());
-    // if user is authenticated in the session, carry on
-    if (req.isAuthenticated()) return next();
-    // if they aren't redirect them to the home page
-    res.redirect("/");
-  }
 
 // After authentication - home route
-app.get("/home", isLoggedIn, (req, res) => {
-    res.render("home", {
-        // We removed name to simplify
-        name: "Default Name",
-        link: req.user.rows[0].link,
-        email: req.user.rows[0].email
-    })
+app.get("/home", (req, res) => {
+    getData.loadHomeByEmail(sess, pro_email)
+        .then(result => {
+            res.render("Home", {
+                name: sess.user.name,
+                link: sess.user.link,
+                email: sess.user.email
+            });
+        })
+        .catch(err => { res.send('error auth') })
 
 });
 
 // Invite route
 app.post("/invite", (req, res) => {
-    const data = {
-        senderId: req.body.link,
-        // Should be the receiver email
-        receiver: req.body.to
-    };
-    // Before we send out the invite, already create the profile for the prospective user
-    newUser = updateData.createUser(receiver);
-    sendInviteEmail(data.receiver, data.senderId, newUser);
-    res.send("Invite Sent!")
-    
-});
+    let senderId = req.body.link,
+        sendermsg = req.body.msg,
+        receiverId = req.body.to,
+        link = shortid.generate();
+    sendername = req.body.name,
+        created_at = new Date().toISOString();
+    updated_at = new Date().toISOString();
 
+    console.log("app.post/invite");
 
-// User invitations, we will only return a count of the user invitations
-app.get("/myInvitations", (req, res) => {
-    const inviteCode = req.query.link
-    const userId = ;
-    getData.GetInvitationCountByInviteCode(userId)
-        res.status(200).send({
-            count: result
+    updateData.createNewInvite(created_at, updated_at, link, senderId, sendermsg, sendername, receiverId)
+        .then((result => {
+            sendEmail(receiverId, senderId, link);
+            res.send("invited");
+
         })
+        )
 });
 
-// Send invite email link
-function sendInviteEmail(_to, _from, receivingUser) {
-    console.log(process.env.password)
 
+// User invitations
+app.get("/myInvitations", (req, res) => {
+    let link = req.query.link
+    console.log(link)
+    getData.getInvitationFromInviteLink(link)
+        .then((result) => {
+            res.status(200).send(result);
+        })
+        .catch(err => {
+            res.send(err);
+        });
+});
+
+// Send email function
+function sendEmail(_to, _from, _link) {
+    console.log(process.env.password)
     var transporter = nodemailer.createTransport({
         service: "gmail",
         auth: {
@@ -228,14 +203,8 @@ function sendInviteEmail(_to, _from, receivingUser) {
             pass: process.env.password
         }
     });
-<<<<<<< HEAD
     //clientUrl is the website to direct users to
     let clientUrl = `https://tpshop.herokuapp.com/?invite/${_from}-${_link}`;
-=======
-    const inviteCode = get;
-    // clientUrl is the website to direct users to
-    let clientUrl = `https://tpshop.herokuapp.com/invite/${inviteCode}-${receivingUser.uuid}`;
->>>>>>> 8f6e6ceb0b1172b9b547269b0b9d9514240f8234
     var mailOptions = {
         from: "roseliao1230@gmail.com",
         to: _to,
@@ -250,36 +219,24 @@ function sendInviteEmail(_to, _from, receivingUser) {
         }
     });
 }
-// Invitation view
+// invitation view
 app.get("/invite/:id", (req, res) => {
-    // Split the url param id into inviteCode and newUserUuid
-    let inviteCode = req.params.id
-    .trim()
-    .split("-")[0]
-    .trim();
-  let newUserUuid = req.params.id
-    .trim()
-    .split("-")[1]
-    .trim();
-
-    const inviteCodeExists = getData.checkInviteCodeIsValid(inviteCode);
-
-    if(inviteCodeExists){
-        const user = getData.getUserByInviteCode(inviteCode);
-        updateData.addReferral(user.uuid, newUserUuid)
-        /**
-         * @Joyce may have to change the sendername and sendermsg to some other user-defined string
-         */
-        res.render("invite", {sendername: user.email, sendermsg: "Welcome"});
-        
-    }
-    else{
-        res.send("invite", {sendername: "No one", sendermsg: "No invite code exists"});
-    }
-        
+    console.log(req.params);
+    let sender = req.params.id
+        .trim()
+        .split("-")[0]
+        .trim();
+    let inviteLink = req.params.id
+        .trim()
+        .split("-")[1]
+        .trim();
+    console.log(sender);
+    console.log(inviteLink);
+    getInvitationFromSenderId(sender, inviteLink)
+        .then((result) => { res.send(result) })
+        .catch((err) => { res.send(err) })
 });
-
-// Logout
+//logout
 app.get('/logout', (req, res) => {
     req.logout();
     res.redirect('/');
@@ -287,20 +244,18 @@ app.get('/logout', (req, res) => {
 
 /**
 * ===================================
-* Listen to requests on port 3000
+* Listen to requests on port 5000
 * ===================================
 */
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 5000;
 
 initDb((err) => {
     if (err) {
         throw err;
     }
     app.listen(PORT, () => console.log('~~~ Tuning in to the waves of port ' + PORT + ' ~~~'));
+
 })
-
-
-// No proper onClose means that DB could be corrupted
 // let onClose = function () {
 //     server.close(() => {
 //         console.log('Process terminated')
