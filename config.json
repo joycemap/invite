@@ -1,0 +1,13 @@
+{
+	"production_db": {
+
+	},
+	"local_db": {
+		"user": "joyce",
+		"host": "127.0.0.1",
+		"database": "invite",
+		"port": 5432,
+		"ssl": false
+	}
+
+}

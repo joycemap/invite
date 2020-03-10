@@ -1,0 +1,93 @@
+<html>
+
+<head>
+	<title>Node Authentication</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
+		integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous" />
+	<link rel="stylesheet" href="https://unpkg.com/shards-ui@latest/dist/css/shards.min.css" />
+	<style>
+		body {
+			padding-top: 80px;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="container">
+
+		<div class="jumbotron text-center">
+			<div style="float:right;"><a href="/logout" class="btn btn-default btn-sm">Logout</a></div>
+			<h3> Welcome
+				<span id="name"><%= name %></span>
+			</h3>
+			<p id="currentUser"><%= email %></p>
+			<p>Your Invitation Code is:
+				<span id="link"><%= link %></span>
+			</p>
+			<hr>
+			<input type="email" placeholder="email" id="invite_mail">
+
+			<label for="message"></label>
+			<input id="message" placeholder="Your message"></input>
+			<button onclick="invite()"> Invite</button>
+			<br />
+			<button onclick="myInvitations()" style="margin-top:20px;"> My Invites</button>
+			<br />
+			<ul id="myInvites" style="list-style:none;">
+
+			</ul>
+		</div>
+
+	</div>
+	<script>
+		//function to send invite
+		function invite() {
+			let sender = document.getElementById('currentUser').innerHTML;
+			let link = document.getElementById('link').innerHTML;
+			let inviteTo = document.getElementById('invite_mail').value;
+			let message = document.getElementById('message').value;
+			let name = document.getElementById('name').innerHTML;
+			fetch('/invite', {
+
+				method: 'POST',
+				headers: {
+					'content-type': 'application/json'
+				},
+				body: JSON.stringify({
+					sender: sender,
+					link: link,
+					to: inviteTo,
+					msg: message,
+					name: name
+				})
+			}).then(res => console.log(res)).catch(err => console.log(err))
+		}
+		// function to get all the invitations
+		function myInvitations() {
+			if (document.getElementById('myInvites').children.length === 0) {
+				let link = document.getElementById('link').innerHTML;
+				fetch(`/myInvitations?link=${link}`).then(res => res.json()).then(invites => {
+					invites.forEach(invite => {
+						addToList(invite.receiverid, invite.created_at, invite.updated_at)
+					});
+				})
+			}
+		}
+
+		function addToList(_to, _sent, _seen) {
+			let isSeen = "not seen";
+			if (new Date(_seen) - new Date(_sent) > 0) {
+				isSeen = "Seen"
+			}
+			let sent = new Date(_sent).toLocaleDateString();
+			let node = document.createElement("LI"); // Create a <li> node
+			let textnode = document.createTextNode(`${_to} - ${sent} - ${isSeen}`); // Create a text node
+			node.appendChild(textnode); // Append the text to <li>
+			document.getElementById("myInvites").appendChild(node);
+		}
+	</script>
+</body>
+
+</html>

@@ -1,0 +1,42 @@
+{
+	"name": "invitation",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.js",
+	"dependencies": {
+		"axios": "^0.17.1",
+		"better-sqlite3": "^6.0.1",
+		"body-parser": "^1.18.2",
+		"cookie-session": "^2.0.0-beta.3",
+		"dotenv": "^8.2.0",
+		"ejs": "^2.5.7",
+		"express": "^4.16.2",
+		"express-enforces-ssl": "^1.1.0",
+		"express-react-views": "^0.11.0",
+		"express-session": "^1.15.6",
+		"fs": "0.0.1-security",
+		"lodash": "^4.17.5",
+		"nodemailer": "^4.6.3",
+		"nodemon": "^1.14.12",
+		"passport": "^0.4.1",
+		"passport-facebook": "^2.1.1",
+		"pg": "^7.4.1",
+		"react": "^16.13.0",
+		"react-dom": "^16.13.0",
+		"sha3": "^2.1.1",
+		"shortid": "^2.2.8",
+		"uuid": "^7.0.2"
+	},
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"start": "node ./server/server.js",
+		"start:dev": "node index.js"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"devDependencies": {
+		"prettier": "1.11.1",
+		"prettier-eslint": "^8.8.1"
+	}
+}
