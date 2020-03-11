@@ -261,7 +261,7 @@ function sendEmail(_to, _from, _link, sendermsg, sendername) {
         from: "roseliao1230@gmail.com",
         to: _to,
         subject: "You have been Invited to Awesome App",
-        html: `<p> ${sendername} says ${sendermsg}. </p>
+        html: `<p> ${sendername} says ${sendermsg}.
         Your invitation link is: <a href='${clientUrl}'> ${clientUrl}</a>`
     };
     transporter.sendMail(mailOptions, function (error, info) {
