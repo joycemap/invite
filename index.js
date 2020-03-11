@@ -5,7 +5,6 @@ require('dotenv').config();
 * ===================================
 */
 const express = require("express");
-const methodOverride = require('method-override');
 const pg = require('pg');
 const app = express();
 var session = require("express-session");
