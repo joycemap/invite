@@ -55,6 +55,18 @@ function getDb() {
 }
 
 var getData = {
+    // Returns 1 if exists, false or 0 if not
+    // checkUserExistsByEmail: (pro_email) => {
+    //     const status = runQuery(
+    //         'SELECT COUNT() as existing FROM users WHERE users.email = ?',
+    //         [pro_email],
+    //         "get"
+    //     )
+    //     if (status.success) {
+    //         return status.result.existing;
+    //     }
+    //     return false;
+    // },
     getUserByEmail: (email) => { },
     getInvitationFromSenderId: (sender, inviteLink, seen) => {
         return new Promise((resolve, reject) => {
@@ -93,7 +105,6 @@ var getData = {
 
     loadHomeByEmail: (sess, pro_email) => {
         return new Promise((resolve, reject) => {
-            // How is pro email stored?
 
             _db_client.query(`SELECT * FROM users WHERE email='${pro_email}'`,
                 (err, doc) => {

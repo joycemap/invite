@@ -1,6 +1,9 @@
 require('dotenv').config();
-
-// REquired third-party libraries
+/**
+* ===================================
+* Third-party Libraries
+* ===================================
+*/
 const express = require("express");
 const pg = require('pg');
 const app = express();
@@ -10,25 +13,29 @@ const passport = require("passport");
 const FacebookStrategy = require("passport-facebook").Strategy;
 var shortid = require("shortid");
 const bodyParser = require("body-parser");
-const expressReact = require('express-react-views');
 var nodemailer = require("nodemailer");
 
-// Local libraries
+/**
+* ===================================
+* Local Libraries
+* ===================================
+*/
 const initDb = require("./database").initDb;
 const getDb = require("./database").getDb;
 const getUsers = require("./database").getUsers;
 const getData = require("./database").getData;
 const updateData = require("./database").updateData;
-
-
-// const email = require("./emailService");
 const config = require("./config.json");
 
+/**
+* ===================================
+* Global Variables
+* ===================================
+*/
 let pro_email = "";
 var sess = {
     user: {}
 };
-
 
 //check to see if we have this heroku environment variable
 if (process.env.IS_PROD) {
@@ -45,11 +52,12 @@ if (process.env.IS_PROD) {
     );
 
 }
+/**
+* ===================================
+* Set our client folder and view
+* ===================================
+*/
 
-
-// Set our client folder and view
-// Set react-views to be the default view engine
-const reactEngine = expressReact.createEngine();
 app.set('views', __dirname + '/views');
 app.set("view engine", "ejs");
 app.use(express.static(__dirname + '/public'));
@@ -59,7 +67,11 @@ app.use(express.urlencoded({
     extended: true
 }));
 
-// Maintain a session
+/**
+* ===================================
+* Maintain a session
+* ===================================
+*/
 app.use(
     session({
         secret: "secret",
@@ -73,7 +85,11 @@ app.use(
     })
 );
 
-// Initialize passport app
+/**
+* ===================================
+* Initialize Passport App
+* ===================================
+*/
 app.use(passport.initialize());
 app.use(passport.session());
 
@@ -87,14 +103,13 @@ passport.use(
             clientID: process.env.clientID,
             clientSecret: process.env.clientSecret,
             callbackURL:
-                "http://localhost:5000/auth/facebook/callback",
-            // "https://tpshop.herokuapp.com/auth/facebook/callback",
+                // "http://localhost:5000/auth/facebook/callback",
+                "https://referfriends.herokuapp.com/auth/facebook/callback",
             profileFields: ["id", "displayName", "photos", "email"],
             enableProof: true
         },
+
         function (accessToken, refreshToken, profile, done) {
-            //we get the above 4 things from facebook
-            //first we will check if the user is in our database. If not we will add the user and give done callback.
             pro_email = profile.emails[0].value;
             getData.loadHomeByEmail(sess, pro_email)
                 .then(session => {
@@ -108,9 +123,37 @@ passport.use(
                 })
         })
 )
+//             const userProfileExists = getData.checkUserExistsByEmail(pro_email);
+//             let user = null;
 
+//             getData.loadHomeByEmail(sess, pro_email)
+//                 .then(session => {
+//                     let shortId = shortid.generate();
+//                     while (shortId.indexOf('-') >= 0) {
+//                         shortId = shortid.generate();
+//                     }
+//             if(userProfileExists)
+//                   user Object
+//                   {name: profile.displayName,
+//                   link: shortId,
+//                   email: pro_email
+//                  }
+//                 user = getData.getUserByEmail(pro_email);
+//                 done(null, {rows: [{ name: profile.displayName, link: shortId, email: pro_email }] });
+//             }else{
+//                     updateData.createUser(profile, shortId, pro_email).then(result => {
+//                         done(null, { result })
+//                     }).catch(err => { console.log(err) })
+//                 })
+//         })
+// )
 
-// Allow cross origin requests
+/**
+* ===================================
+* Allow cross origin requests
+* ===================================
+*/
+
 app.use(function (req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header(
@@ -120,16 +163,28 @@ app.use(function (req, res, next) {
     next();
 });
 
-// Index route
+/**
+* ===================================
+* Index route - Link to Authenticate
+* ===================================
+*/
 app.get("/", (req, res) => {
     res.render("Index");
 });
 
-// Test route
+/**
+* ===================================
+* Test route - to see if app renders
+* ===================================
+*/
 app.get("/test", (req, res) => {
     res.send("OK");
 });
-// Facebook callback url
+/**
+* ===================================
+* Facebook Auth Callback
+* ===================================
+*/
 app.get(
     "/auth/facebook/callback",
     passport.authenticate("facebook", {
@@ -143,8 +198,11 @@ app.get(
     passport.authenticate("facebook", { scope: "email" })
 );
 
-
-// After authentication - home route
+/**
+* ===================================
+* After Facebook Auth - Home route
+* ===================================
+*/
 app.get("/home", (req, res) => {
     getData.loadHomeByEmail(sess, pro_email)
         .then(result => {
@@ -158,7 +216,11 @@ app.get("/home", (req, res) => {
 
 });
 
-// Invite route
+/**
+* ===================================
+* Invite Route
+* ===================================
+*/
 app.post("/invite", (req, res) => {
     let senderId = req.body.link,
         sendermsg = req.body.msg,
@@ -179,8 +241,11 @@ app.post("/invite", (req, res) => {
         )
 });
 
-
-// User invitations
+/**
+* ===================================
+* Invitations - Not needed; see Home view
+* ===================================
+*/
 app.get("/myInvitations", (req, res) => {
     let link = req.query.link
     console.log(link)
@@ -193,7 +258,11 @@ app.get("/myInvitations", (req, res) => {
         });
 });
 
-// Send email function
+/**
+* ===================================
+* Send Email function
+* ===================================
+*/
 function sendEmail(_to, _from, _link, sendermsg, sendername) {
 
     var transporter = nodemailer.createTransport({
@@ -204,12 +273,13 @@ function sendEmail(_to, _from, _link, sendermsg, sendername) {
         }
     });
     //clientUrl is the website to direct users to
+    // let clientUrl = `http://localhost:5000/?invite/${_from}-${_link}`;
     let clientUrl = `https://tpshop.herokuapp.com/?invite/${_from}-${_link}`;
     var mailOptions = {
         from: "roseliao1230@gmail.com",
         to: _to,
         subject: "You have been Invited to Awesome App",
-        html: `<p> ${sendername} says ${sendermsg} 
+        html: `<p> ${sendername} says ${sendermsg}. </p>
         Your invitation link is: <a href='${clientUrl}'> ${clientUrl}</a>`
     };
     transporter.sendMail(mailOptions, function (error, info) {
@@ -220,24 +290,33 @@ function sendEmail(_to, _from, _link, sendermsg, sendername) {
         }
     });
 }
-// invitation view
-app.get("/invite/:id", (req, res) => {
-    console.log(req.params);
-    let sender = req.params.id
-        .trim()
-        .split("-")[0]
-        .trim();
-    let inviteLink = req.params.id
-        .trim()
-        .split("-")[1]
-        .trim();
-    console.log(sender);
-    console.log(inviteLink);
-    getInvitationFromSenderId(sender, inviteLink)
-        .then((result) => { res.send(result) })
-        .catch((err) => { res.send(err) })
-});
-//logout
+/**
+* =======================================
+* Invitation view (not needed; see email)
+* ======================================
+*/
+// app.get("/?invite/:id", (req, res) => {
+//     console.log(req.params);
+//     let sender = req.params.id
+//         .trim()
+//         .split("-")[0]
+//         .trim();
+//     let inviteLink = req.params.id
+//         .trim()
+//         .split("-")[1]
+//         .trim();
+//     console.log(sender);
+//     console.log(inviteLink);
+//     getInvitationFromSenderId(sender, inviteLink)
+//         .then((result) => { res.send(result) })
+//         .catch((err) => { res.send(err) })
+// });
+
+/**
+* ===================================
+* Logout
+* ===================================
+*/
 app.get('/logout', (req, res) => {
     req.logout();
     res.redirect('/');
@@ -257,12 +336,3 @@ initDb((err) => {
     app.listen(PORT, () => console.log('~~~ Tuning in to the waves of port ' + PORT + ' ~~~'));
 
 })
-// let onClose = function () {
-//     server.close(() => {
-//         console.log('Process terminated')
-//         // allModels.pool.end(() => console.log('Shut down db connection pool'));
-//     })
-// };
-
-// process.on('SIGTERM', onClose);
-// process.on('SIGINT', onClose);
