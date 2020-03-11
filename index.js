@@ -103,16 +103,21 @@ passport.use(
             clientID: process.env.clientID,
             clientSecret: process.env.clientSecret,
             callbackURL:
-                "https://referfriends.herokuapp.com/auth/facebook/callback",
-            // "http://localhost:5000/auth/facebook/callback",
+                // "https://referfriends.herokuapp.com/auth/facebook/callback",
+                "http://localhost:5000/auth/facebook/callback",
             profileFields: ["id", "displayName", "photos", "email"],
             enableProof: true
         },
 
         function (accessToken, refreshToken, profile, done) {
             pro_email = profile.emails[0].value;
+
             getData.loadHomeByEmail(sess, pro_email)
-                .then(session => {
+                .then(res => {
+                    let arrResult = [];
+                    arrResult.push(res)
+                    done(null, { arrResult })
+                }).catch(err => {
                     let shortId = shortid.generate();
                     while (shortId.indexOf('-') >= 0) {
                         shortId = shortid.generate();
@@ -121,32 +126,9 @@ passport.use(
                         done(null, { result })
                     }).catch(err => { console.log(err) })
                 })
+
         })
 )
-//             const userProfileExists = getData.checkUserExistsByEmail(pro_email);
-//             let user = null;
-
-//             getData.loadHomeByEmail(sess, pro_email)
-//                 .then(session => {
-//                     let shortId = shortid.generate();
-//                     while (shortId.indexOf('-') >= 0) {
-//                         shortId = shortid.generate();
-//                     }
-//             if(userProfileExists)
-//                   user Object
-//                   {name: profile.displayName,
-//                   link: shortId,
-//                   email: pro_email
-//                  }
-//                 user = getData.getUserByEmail(pro_email);
-//                 done(null, {rows: [{ name: profile.displayName, link: shortId, email: pro_email }] });
-//             }else{
-//                     updateData.createUser(profile, shortId, pro_email).then(result => {
-//                         done(null, { result })
-//                     }).catch(err => { console.log(err) })
-//                 })
-//         })
-// )
 
 /**
 * ===================================

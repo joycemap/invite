@@ -15,4 +15,5 @@ IF NOT EXISTS users
 (id SERIAL PRIMARY KEY, 
 name TEXT, 
 link TEXT, 
-email TEXT);
+email VARCHAR
+(50) UNIQUE);
