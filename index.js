@@ -103,7 +103,8 @@ passport.use(
             clientID: process.env.clientID,
             clientSecret: process.env.clientSecret,
             callbackURL:
-                "http://localhost:5000/auth/facebook/callback",
+                "http://referfriends.herokuapp.com/auth/facebook/callback",
+            // "http://localhost:5000/auth/facebook/callback",
             profileFields: ["id", "displayName", "photos", "email"],
             enableProof: true
         },
