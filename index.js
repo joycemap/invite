@@ -87,7 +87,7 @@ app.use(
 
 /**
 * ===================================
-* Initialize Passport App
+* Initialize Passport App - https://github.com/jaredhanson/passport-facebook
 * ===================================
 */
 app.use(passport.initialize());
@@ -103,8 +103,7 @@ passport.use(
             clientID: process.env.clientID,
             clientSecret: process.env.clientSecret,
             callbackURL:
-                // "http://localhost:5000/auth/facebook/callback",
-                "https://referfriends.herokuapp.com/auth/facebook/callback",
+                "http://localhost:5000/auth/facebook/callback",
             profileFields: ["id", "displayName", "photos", "email"],
             enableProof: true
         },

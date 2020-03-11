@@ -2,11 +2,12 @@ const pg = require('pg');
 const { Client } = require("pg");
 const assert = require("assert");
 const config = require("./config.json");
+const url = require('url')
 
 // Variable that holds the database client
 let _db_client;
 let db_config;
-if (process.env.IS_PROD) {
+if (process.env.DATABASE_URL) {
     const params = url.parse(process.env.DATABASE_URL);
     const auth = params.auth.split(':');
 
