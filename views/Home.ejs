@@ -1,7 +1,7 @@
 <html>
 
 <head>
-	<title>Node Authentication</title>
+	<title>Refer-A-Friend</title>
 	<meta charset="utf-8" />
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 	<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css"
@@ -27,13 +27,14 @@
 				<span id="link"><%= link %></span>
 			</p>
 			<hr>
-			<input type="email" placeholder="email" id="invite_mail">
+			<p>Enter the email address of your friends and include a message below!</p>
+			<input type="email" placeholder="Email" id="invite_mail">
 
 			<label for="message"></label>
 			<input id="message" placeholder="Your message"></input>
-			<button onclick="invite()"> Invite</button>
+			<button onclick="invite()"> Invite Friends</button>
 			<br />
-			<button onclick="myInvitations()" style="margin-top:20px;"> My Invites</button>
+			<button onclick="myInvitations()" style="margin-top:20px;"> My Invites Sent</button>
 			<br />
 			<ul id="myInvites" style="list-style:none;">
 

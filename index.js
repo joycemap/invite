@@ -172,7 +172,7 @@ app.post("/invite", (req, res) => {
 
     updateData.createNewInvite(created_at, updated_at, link, senderId, sendermsg, sendername, receiverId)
         .then((result => {
-            sendEmail(receiverId, senderId, link);
+            sendEmail(receiverId, senderId, link, sendermsg, sendername);
             res.send("invited");
 
         })
@@ -194,8 +194,8 @@ app.get("/myInvitations", (req, res) => {
 });
 
 // Send email function
-function sendEmail(_to, _from, _link) {
-    console.log(process.env.password)
+function sendEmail(_to, _from, _link, sendermsg, sendername) {
+
     var transporter = nodemailer.createTransport({
         service: "gmail",
         auth: {
@@ -209,7 +209,8 @@ function sendEmail(_to, _from, _link) {
         from: "roseliao1230@gmail.com",
         to: _to,
         subject: "You have been Invited to Awesome App",
-        html: `<p> Your invitation link is: <a href='${clientUrl}'> ${clientUrl}</a>`
+        html: `<p> ${sendername} says ${sendermsg} 
+        Your invitation link is: <a href='${clientUrl}'> ${clientUrl}</a>`
     };
     transporter.sendMail(mailOptions, function (error, info) {
         if (error) {

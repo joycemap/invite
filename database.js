@@ -115,9 +115,7 @@ var getData = {
 var updateData = {
     createUser: (profile, shortId, pro_email) => {
         return new Promise((resolve, reject) => {
-            _db_client.query(`INSERT INTO users (name, link, email) VALUES ('$1
-                profile.displayName
-                }','${shortId}','${pro_email}')`,
+            _db_client.query(`INSERT INTO users (name, link, email) VALUES ('${profile.displayName}','${shortId}','${pro_email}')`,
                 (err, res) => {
                     if (err) {
                         console.log(err);
